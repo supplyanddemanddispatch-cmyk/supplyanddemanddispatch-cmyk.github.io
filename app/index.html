@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>S&amp;D Autopilot</title>
+<meta name="description" content="Back office for owner-operators: load profit, broker checks, invoices, paperwork reminders. By Supply & Demand Dispatch.">
+<meta name="theme-color" content="#0f2340">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="S&D Autopilot">
+<style>
+:root{--navy:#0f2340;--amber:#f2a33a;--ink:#1d2430;--muted:#5b6575;--bg:#f4f6f9;--card:#fff;--line:#dfe3ea;--good:#1f8a4c;--bad:#c0392b;--warn:#b7791f}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,system-ui,Segoe UI,Roboto,sans-serif;line-height:1.45}
+header{background:var(--navy);color:#fff;padding:14px 16px calc(10px);padding-top:max(14px,env(safe-area-inset-top));position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:18px;letter-spacing:.2px}
+header h1 span{color:var(--amber)}
+header p{margin:2px 0 0;font-size:12px;opacity:.8}
+main{max-width:640px;margin:0 auto;padding:14px 16px 96px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(6,1fr);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{background:none;border:0;padding:8px 2px 9px;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button b{font-size:19px;line-height:1}
+nav button.on{color:var(--navy);font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+h2{font-size:17px;margin:0 0 10px}
+h3{font-size:14px;margin:12px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+label{display:block;font-size:13px;color:var(--muted);margin:8px 0 3px}
+input,select,textarea{width:100%;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.btn{display:inline-block;background:var(--navy);color:#fff;border:0;border-radius:8px;padding:11px 14px;font-size:15px;font-weight:600;text-decoration:none;text-align:center;cursor:pointer}
+.btn.alt{background:#fff;color:var(--navy);border:1px solid var(--navy)}
+.btn.amber{background:var(--amber);color:#1d2430}
+.btn.sm{padding:7px 10px;font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.big{font-size:30px;font-weight:800;margin:4px 0}
+.good{color:var(--good)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.muted{color:var(--muted);font-size:13px}
+.stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.stat:last-child{border-bottom:0}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px;margin:8px 0;background:#fff}
+.item .top{display:flex;justify-content:space-between;gap:8px;font-weight:700}
+.pill{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:#eef1f6;color:var(--navy);font-weight:700}
+.pill.paid{background:#e3f5ea;color:var(--good)}.pill.delivered{background:#fff4e0;color:var(--warn)}
+.check{display:flex;gap:10px;align-items:flex-start;padding:7px 0;font-size:15px}
+.check input{width:22px;height:22px;flex:none;margin-top:1px}
+.hide{display:none}
+.boards a{display:block;margin:8px 0}
+footer{text-align:center;font-size:12px;color:var(--muted);margin-top:20px}
+@media print{header,nav,.noprint{display:none!important}main{padding:0}body{background:#fff}.card{border:0}}
+#invoice{font-size:14px}
+#invoice table{width:100%;border-collapse:collapse;margin-top:10px}
+#invoice td,#invoice th{border-bottom:1px solid var(--line);padding:6px;text-align:left}
+</style>
+</head>
+<body>
+<header><h1>S&amp;D <span>Autopilot</span></h1><p>Your back office in your pocket · by Supply &amp; Demand Dispatch</p></header>
+<main>
+
+<!-- LOAD CHECK -->
+<section id="t-load">
+ <div class="card">
+  <h2>Is this load worth it?</h2>
+  <div class="row"><div><label>Rate ($)</label><input id="l-rate" type="number" inputmode="decimal" placeholder="2400"></div>
+  <div><label>Loaded miles</label><input id="l-mi" type="number" inputmode="decimal" placeholder="588"></div></div>
+  <div class="row"><div><label>Deadhead miles (to pickup)</label><input id="l-dh" type="number" inputmode="decimal" placeholder="30"></div>
+  <div><label>Tolls / extra costs ($)</label><input id="l-x" type="number" inputmode="decimal" placeholder="0"></div></div>
+  <div class="row"><div><label>Pickup city</label><input id="l-from" placeholder="Houston, TX"></div>
+  <div><label>Delivery city</label><input id="l-to" placeholder="Pecos, TX"></div></div>
+  <div class="row"><div><label>Pickup date</label><input id="l-date" type="date"></div>
+  <div><label>Broker</label><input id="l-broker" placeholder="Broker name"></div></div>
+  <div id="l-out" class="card" style="margin-top:12px;background:#f8fafc"></div>
+  <div class="btns"><button class="btn" onclick="saveLoad()">Save load</button><button class="btn alt" onclick="clearLoad()">Clear</button></div>
+  <p class="muted">Uses your fuel price, MPG and cost per mile from Settings.</p>
+ </div>
+ <div class="card"><h2>My loads</h2><div id="loads"></div></div>
+</section>
+
+<!-- FIND LOADS -->
+<section id="t-find" class="hide">
+ <div class="card">
+  <h2>Find loads</h2>
+  <p class="muted">Each board opens in your browser. Sign in once yourself; your phone remembers you. Then use "Is this load worth it?" to check the real pay.</p>
+  <div class="boards">
+   <a class="btn" target="_blank" rel="noopener" href="https://www.trucksmarter.com/">TruckSmarter (free)</a>
+   <a class="btn" target="_blank" rel="noopener" href="https://loadboard.truckerpath.com/">Trucker Path TruckLoads (free)</a>
+   <a class="btn alt" target="_blank" rel="noopener" href="https://www.trulos.com/">Trulos</a>
+   <a class="btn alt" target="_blank" rel="noopener" href="https://one.dat.com/">DAT One</a>
+   <a class="btn alt" target="_blank" rel="noopener" href="https://truckstop.com/">Truckstop</a>
+   <a class="btn alt" target="_blank" rel="noopener" href="https://www.123loadboard.com/">123Loadboard</a>
+  </div>
+ </div>
+ <div class="card">
+  <h2>Before you call the broker</h2>
+  <div id="callnotes"></div>
+ </div>
+</section>
+
+<!-- BROKER CHECK -->
+<section id="t-broker" class="hide">
+ <div class="card">
+  <h2>Check a broker</h2>
+  <label>Broker MC or DOT number</label>
+  <div class="row"><input id="b-num" inputmode="numeric" placeholder="e.g. 123456"><select id="b-type"><option value="MC">MC number</option><option value="USDOT">DOT number</option></select></div>
+  <div class="btns"><button class="btn" onclick="openSafer()">Look up on FMCSA</button></div>
+  <p class="muted">Opens the government's free FMCSA record. Check the items below before you book.</p>
+  <div id="b-checks"></div>
+  <label>Notes on this broker</label><input id="b-name" placeholder="Broker name"><textarea id="b-note" rows="3" placeholder="Days to pay, contact, how it went"></textarea>
+  <div class="btns"><button class="btn" onclick="saveBroker()">Save broker</button></div>
+ </div>
+ <div class="card"><h2>My brokers</h2><div id="brokers"></div></div>
+</section>
+
+<!-- MONEY -->
+<section id="t-money" class="hide">
+ <div class="card"><h2>Money</h2>
+  <div class="row"><div><label>From</label><input id="m-from" type="date"></div><div><label>To</label><input id="m-to" type="date"></div></div>
+  <div id="m-out" style="margin-top:10px"></div>
+ </div>
+ <div class="card"><h2>Add an expense</h2>
+  <div class="row"><div><label>Date</label><input id="e-date" type="date"></div><div><label>Amount ($)</label><input id="e-amt" type="number" inputmode="decimal"></div></div>
+  <label>Type</label><select id="e-type"><option>Fuel</option><option>Repairs</option><option>Tires</option><option>Insurance</option><option>Truck payment</option><option>Tolls</option><option>Load board</option><option>Food / lodging</option><option>Other</option></select>
+  <label>Note</label><input id="e-note">
+  <div class="btns"><button class="btn" onclick="saveExp()">Save expense</button></div>
+  <div id="exps"></div>
+ </div>
+ <div id="invoice-wrap" class="card hide"><div class="noprint btns" style="margin-top:0"><button class="btn" onclick="window.print()">Save as PDF / Print</button><button class="btn alt" onclick="closeInvoice()">Close</button></div><div id="invoice"></div></div>
+</section>
+
+<!-- PAPERWORK -->
+<section id="t-papers" class="hide">
+ <div class="card"><h2>Paperwork &amp; due dates</h2>
+  <p class="muted">Enter each expiration date. You'll see a warning 30 days before.</p>
+  <div id="papers"></div>
+ </div>
+</section>
+
+<!-- SETTINGS -->
+<section id="t-set" class="hide">
+ <div class="card"><h2>My company (goes on invoices)</h2>
+  <label>Company name</label><input id="s-co">
+  <div class="row"><div><label>MC number</label><input id="s-mc"></div><div><label>DOT number</label><input id="s-dot"></div></div>
+  <label>Address</label><input id="s-addr">
+  <div class="row"><div><label>Phone</label><input id="s-phone" type="tel"></div><div><label>Email</label><input id="s-email" type="email"></div></div>
+  <label>Pay terms (days)</label><input id="s-terms" type="number" value="30">
+ </div>
+ <div class="card"><h2>My truck costs</h2>
+  <div class="row3"><div><label>Fuel $/gal</label><input id="s-fuel" type="number" inputmode="decimal" value="4.00"></div><div><label>MPG</label><input id="s-mpg" type="number" inputmode="decimal" value="6.5"></div><div><label>Other $/mile</label><input id="s-cpm" type="number" inputmode="decimal" value="0.60"></div></div>
+  <p class="muted"><b>Starting numbers are examples:</b> put in your own fuel price, MPG and cost per mile.</p>
+  <p class="muted">"Other $/mile" = truck payment, insurance, maintenance, tires spread per mile. Fuel is figured separately.</p>
+  <div class="btns"><button class="btn" onclick="saveSettings()">Save settings</button></div>
+ </div>
+ <div class="card"><h2>Backup</h2>
+  <p class="muted">Everything stays on this phone. Make a backup file now and then, and after a new phone, load it back.</p>
+  <div class="btns"><button class="btn" onclick="exportData()">Download backup</button><label class="btn alt" style="margin:0">Load backup<input type="file" accept=".json" class="hide" onchange="importData(this)"></label></div>
+ </div>
+ <div class="card"><h2>Add to your home screen</h2>
+  <p class="muted">iPhone: tap Share, then "Add to Home Screen". Android: tap the menu (⋮), then "Install app". It then opens like a normal app and is built to work without signal.</p>
+ </div>
+ <footer>S&amp;D Autopilot v1 · Supply &amp; Demand Dispatch · <a href="https://supplyanddemanddispatch.com/start">Want us to dispatch for you?</a></footer>
+</section>
+
+</main>
+<nav>
+ <button data-t="load" class="on"><b>💲</b>Load</button>
+ <button data-t="find"><b>🔎</b>Find</button>
+ <button data-t="broker"><b>🛡️</b>Broker</button>
+ <button data-t="money"><b>📒</b>Money</button>
+ <button data-t="papers"><b>📄</b>Papers</button>
+ <button data-t="set"><b>⚙️</b>Settings</button>
+</nav>
+
+<script>
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem('sda_'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('sda_'+k,JSON.stringify(v))}catch(e){alert('Could not save on this phone (storage blocked).')}}};
+const money=n=>(n<0?'-':'')+'$'+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=id=>parseFloat($(id).value)||0;
+const today=()=>new Date().toISOString().slice(0,10);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let S=store.get('settings',{fuel:4,mpg:6.5,cpm:0.6,terms:30});
+
+// tabs
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.t));
+function show(t){document.querySelectorAll('main>section').forEach(s=>s.classList.toggle('hide',s.id!=='t-'+t));document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));try{localStorage.setItem('sda_tab',t)}catch(e){};window.scrollTo(0,0);if(t==='money')renderMoney()}
+
+// load check
+function calc(){const rate=num('l-rate'),mi=num('l-mi'),dh=num('l-dh'),x=num('l-x');const all=mi+dh;
+ const fuel=S.mpg>0?all/S.mpg*S.fuel:0,other=all*S.cpm,cost=fuel+other+x,profit=rate-cost;
+ return {rate,mi,dh,x,all,fuel,other,cost,profit,posted:mi?rate/mi:0,real:all?rate/all:0,ppm:all?profit/all:0}}
+function renderCalc(){const c=calc();if(!c.rate||!c.mi){$('l-out').innerHTML='<span class="muted">Enter the rate and miles to see the real pay.</span>';return}
+ const cls=c.profit>0?(c.ppm>=0.75?'good':'warn'):'bad';
+ $('l-out').innerHTML=`<div class="muted">Profit after fuel and costs</div><div class="big ${cls}">${money(c.profit)}</div>
+ <div class="stat"><span>Posted rate per mile</span><b>${money(c.posted)}</b></div>
+ <div class="stat"><span>Real rate per mile (with deadhead)</span><b>${money(c.real)}</b></div>
+ <div class="stat"><span>Total miles you drive</span><b>${c.all.toLocaleString()}</b></div>
+ <div class="stat"><span>Fuel</span><b>${money(c.fuel)}</b></div>
+ <div class="stat"><span>Other truck costs</span><b>${money(c.other)}</b></div>
+ <div class="stat"><span>Tolls / extra</span><b>${money(c.x)}</b></div>
+ <div class="stat"><span>Profit per mile</span><b class="${cls}">${money(c.ppm)}</b></div>
+ <p class="muted" style="margin:8px 0 0">How it's figured: real rate = rate ÷ (loaded + deadhead miles). Fuel = total miles ÷ MPG × fuel price. Other costs = total miles × your other $/mile. Profit = rate − fuel − other costs − tolls. Numbers come from what you enter in Settings.</p>`}
+['l-rate','l-mi','l-dh','l-x'].forEach(id=>$(id).addEventListener('input',renderCalc));
+function saveLoad(){const c=calc();if(!c.rate||!c.mi){alert('Enter the rate and loaded miles first.');return}
+ const L=store.get('loads',[]);L.unshift({id:Date.now(),date:$('l-date').value||today(),from:$('l-from').value,to:$('l-to').value,broker:$('l-broker').value,rate:c.rate,mi:c.mi,dh:c.dh,x:c.x,cost:Math.round(c.cost*100)/100,status:'booked',inv:null});
+ store.set('loads',L);clearLoad();renderLoads()}
+function clearLoad(){['l-rate','l-mi','l-dh','l-x','l-from','l-to','l-broker'].forEach(id=>$(id).value='');$('l-date').value=today();renderCalc()}
+function renderLoads(){const L=store.get('loads',[]);if(!L.length){$('loads').innerHTML='<p class="muted">No loads saved yet.</p>';return}
+ $('loads').innerHTML=L.map(l=>`<div class="item"><div class="top"><span>${esc(l.from||'?')} → ${esc(l.to||'?')}</span><span>${money(l.rate)}</span></div>
+ <div class="muted">${esc(l.date)} · ${esc(l.broker||'no broker')} · ${l.mi+l.dh} mi · profit ${money(l.rate-l.cost)}</div>
+ <div class="btns"><span class="pill ${l.status}">${l.status}</span>
+ <select onchange="setStatus(${l.id},this.value)" style="width:auto;padding:5px;font-size:13px"><option ${l.status==='booked'?'selected':''}>booked</option><option ${l.status==='delivered'?'selected':''}>delivered</option><option ${l.status==='paid'?'selected':''}>paid</option></select>
+ <button class="btn sm" onclick="makeInvoice(${l.id})">Invoice</button><button class="btn sm alt" onclick="delLoad(${l.id})">Remove</button></div></div>`).join('')}
+function setStatus(id,s){const L=store.get('loads',[]);const l=L.find(x=>x.id===id);if(l){l.status=s;if(s==='paid')l.paidOn=today();store.set('loads',L);renderLoads()}}
+function delLoad(id){if(!confirm('Remove this load?'))return;store.set('loads',store.get('loads',[]).filter(x=>x.id!==id));renderLoads()}
+
+// invoice
+function makeInvoice(id){const L=store.get('loads',[]);const l=L.find(x=>x.id===id);if(!l)return;
+ if(!S.co){alert('Add your company name in Settings first (it goes on the invoice).');show('set');return}
+ if(!l.inv){const n=store.get('invno',1000)+1;store.set('invno',n);l.inv=n;store.set('loads',L)}
+ const due=new Date(l.date);due.setDate(due.getDate()+(+S.terms||30));
+ $('invoice').innerHTML=`<h2>INVOICE #${l.inv}</h2>
+ <p><b>${esc(S.co)}</b><br>${esc(S.addr||'')}<br>MC ${esc(S.mc||'-')} · DOT ${esc(S.dot||'-')}<br>${esc(S.phone||'')} ${esc(S.email||'')}</p>
+ <p><b>Bill to:</b> ${esc(l.broker||'Broker')}<br><b>Invoice date:</b> ${today()}<br><b>Due:</b> ${due.toISOString().slice(0,10)} (${esc(S.terms||30)} days)</p>
+ <table><tr><th>Load</th><th>Pickup date</th><th>Miles</th><th>Amount</th></tr>
+ <tr><td>${esc(l.from)} → ${esc(l.to)}</td><td>${esc(l.date)}</td><td>${l.mi}</td><td>${money(l.rate)}</td></tr>
+ <tr><td colspan="3"><b>Total due</b></td><td><b>${money(l.rate)}</b></td></tr></table>
+ <p class="muted">Attach the signed BOL / proof of delivery and the rate confirmation. Thank you for the business.</p>`;
+ show('money');$('invoice-wrap').classList.remove('hide');$('invoice-wrap').scrollIntoView()}
+function closeInvoice(){$('invoice-wrap').classList.add('hide')}
+
+// call notes
+const CALL=['Ask: commodity, weight, and is it tarped / any special equipment?','Ask: pickup and delivery times, appointment or first-come?','Ask: detention and layover pay, and after how many hours?','Ask: quick pay or standard pay, how many days?','Get the rate confirmation in writing before you roll.','Check the broker first (Broker tab).'];
+$('callnotes').innerHTML=CALL.map(c=>`<div class="check"><span>•</span><span>${c}</span></div>`).join('');
+
+// broker
+const BCHK=['Authority shows ACTIVE (Broker authority: Yes)','Broker bond / trust on file (BMC-84 or BMC-85)','Company name and address match who you are talking to','Phone number on the rate con matches FMCSA or their website','Days to pay and credit look OK on your load board','Rate confirmation received and checked'];
+function renderBChecks(){$('b-checks').innerHTML='<h3>Checklist</h3>'+BCHK.map((c,i)=>`<label class="check" style="color:var(--ink);margin:0"><input type="checkbox" id="bc${i}"><span>${c}</span></label>`).join('')}
+function openSafer(){const n=$('b-num').value.replace(/\D/g,'');if(!n){alert('Enter the MC or DOT number.');return}
+ const t=$('b-type').value;const url=t==='MC'?`https://safer.fmcsa.dot.gov/query.asp?searchtype=ANY&query_type=queryCarrierSnapshot&query_param=MC_MX&query_string=${n}`:`https://safer.fmcsa.dot.gov/query.asp?searchtype=ANY&query_type=queryCarrierSnapshot&query_param=USDOT&query_string=${n}`;window.open(url,'_blank','noopener')}
+function saveBroker(){const name=$('b-name').value.trim();if(!name){alert('Enter the broker name.');return}
+ const B=store.get('brokers',[]);const passed=BCHK.filter((_,i)=>$('bc'+i).checked).length;
+ B.unshift({id:Date.now(),name,num:$('b-type').value+' '+$('b-num').value,note:$('b-note').value,passed,of:BCHK.length,date:today()});store.set('brokers',B);
+ ['b-name','b-note','b-num'].forEach(id=>$(id).value='');renderBChecks();renderBrokers()}
+function renderBrokers(){const B=store.get('brokers',[]);$('brokers').innerHTML=B.length?B.map(b=>`<div class="item"><div class="top"><span>${esc(b.name)}</span><span class="${b.passed===b.of?'good':'warn'}">${b.passed}/${b.of} checks</span></div><div class="muted">${esc(b.num)} · ${esc(b.date)}</div><div>${esc(b.note)}</div><div class="btns"><button class="btn sm alt" onclick="delBroker(${b.id})">Remove</button></div></div>`).join(''):'<p class="muted">No brokers saved yet.</p>'}
+function delBroker(id){if(!confirm('Remove this broker?'))return;store.set('brokers',store.get('brokers',[]).filter(x=>x.id!==id));renderBrokers()}
+
+// money
+function inRange(d){const f=$('m-from').value,t=$('m-to').value;return(!f||d>=f)&&(!t||d<=t)}
+function renderMoney(){const L=store.get('loads',[]).filter(l=>inRange(l.date)),E=store.get('exps',[]).filter(e=>inRange(e.date));
+ const gross=L.reduce((a,l)=>a+l.rate,0),miles=L.reduce((a,l)=>a+l.mi+l.dh,0),exp=E.reduce((a,e)=>a+e.amt,0);
+ const owed=L.filter(l=>l.status!=='paid').reduce((a,l)=>a+l.rate,0);
+ $('m-out').innerHTML=`<div class="stat"><span>Loads</span><b>${L.length}</b></div><div class="stat"><span>Gross</span><b>${money(gross)}</b></div><div class="stat"><span>Miles</span><b>${miles.toLocaleString()}</b></div><div class="stat"><span>Gross per mile</span><b>${money(miles?gross/miles:0)}</b></div><div class="stat"><span>Expenses entered</span><b>${money(exp)}</b></div><div class="stat"><span>Gross minus expenses</span><b class="${gross-exp>=0?'good':'bad'}">${money(gross-exp)}</b></div><div class="stat"><span>Still owed to you (not paid)</span><b class="warn">${money(owed)}</b></div>`;
+ $('exps').innerHTML=E.slice(0,30).map(e=>`<div class="item"><div class="top"><span>${esc(e.type)}</span><span>${money(e.amt)}</span></div><div class="muted">${esc(e.date)} ${esc(e.note)}</div><div class="btns"><button class="btn sm alt" onclick="delExp(${e.id})">Remove</button></div></div>`).join('')}
+['m-from','m-to'].forEach(id=>$(id).addEventListener('change',renderMoney));
+function saveExp(){const amt=num('e-amt');if(!amt){alert('Enter the amount.');return}const E=store.get('exps',[]);E.unshift({id:Date.now(),date:$('e-date').value||today(),amt,type:$('e-type').value,note:$('e-note').value});store.set('exps',E);$('e-amt').value='';$('e-note').value='';renderMoney()}
+function delExp(id){if(!confirm('Remove this expense?'))return;store.set('exps',store.get('exps',[]).filter(x=>x.id!==id));renderMoney()}
+
+// paperwork
+const PAPERS=['CDL','Medical card (DOT physical)','Truck insurance','Cargo insurance','IRP cab card / plates','IFTA license','UCR registration','Form 2290 (HVUT)','Annual DOT inspection','Trailer registration','Drug & alcohol clearinghouse query','BOC-3 / MC authority'];
+function renderPapers(){const P=store.get('papers',{});const now=new Date();
+ $('papers').innerHTML=PAPERS.map((p,i)=>{const d=P[p];let st='<span class="muted">no date</span>';if(d){const days=Math.ceil((new Date(d)-now)/864e5);st=days<0?`<b class="bad">EXPIRED ${-days} days ago</b>`:days<=30?`<b class="warn">due in ${days} days</b>`:`<span class="good">OK, ${days} days left</span>`}
+ return `<div class="item"><div class="top"><span>${p}</span></div><div class="row" style="align-items:center"><input type="date" value="${d||''}" onchange="setPaper(${i},this.value)"><div>${st}</div></div></div>`}).join('');
+ const soon=PAPERS.filter(p=>P[p]&&(new Date(P[p])-now)/864e5<=30);
+ if(soon.length){const b=document.createElement('div');b.className='card';b.innerHTML=`<b class="warn">Heads up:</b> ${soon.map(esc).join(', ')} expiring within 30 days.`;document.querySelector('#t-load').prepend(b)}}
+function setPaper(i,v){const P=store.get('papers',{});P[PAPERS[i]]=v;store.set('papers',P);renderPapers()}
+
+// settings
+function loadSettings(){['co','mc','dot','addr','phone','email','terms','fuel','mpg','cpm'].forEach(k=>{if(S[k]!==undefined)$('s-'+k).value=S[k]})}
+function saveSettings(){['co','mc','dot','addr','phone','email'].forEach(k=>S[k]=$('s-'+k).value.trim());['terms','fuel','mpg','cpm'].forEach(k=>S[k]=parseFloat($('s-'+k).value)||0);store.set('settings',S);renderCalc();alert('Saved.')}
+function exportData(){const d={};['settings','loads','brokers','exps','papers','invno'].forEach(k=>d[k]=store.get(k,null));const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,1)],{type:'application/json'}));a.download='sd-autopilot-backup-'+today()+'.json';a.click()}
+function importData(inp){const f=inp.files[0];if(!f)return;f.text().then(t=>{const d=JSON.parse(t);if(!confirm('Replace what is on this phone with the backup?'))return;Object.keys(d).forEach(k=>{if(d[k]!==null)store.set(k,d[k])});location.reload()}).catch(()=>alert('That file is not a valid backup.'))}
+
+// start
+$('l-date').value=today();$('e-date').value=today();
+loadSettings();renderCalc();renderLoads();renderBChecks();renderBrokers();renderPapers();
+try{const t=localStorage.getItem('sda_tab');if(t)show(t)}catch(e){}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
